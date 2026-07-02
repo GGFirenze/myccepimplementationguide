@@ -7,7 +7,9 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 
 <!-- ============================================================= -->
-<!-- LIVE AMPLITUDE INSTRUMENTATION (EU) — highest in <head>.       -->
+<!-- LIVE AMPLITUDE INSTRUMENTATION — highest in <head>.            -->
+<!-- NOTE: this demo points at a US sandbox project (serverZone US).-->
+<!-- CCEP PRODUCTION is EU — switch serverZone to "EU" there.       -->
 <!-- On Salesforce Experience Cloud this whole block goes in        -->
 <!-- Experience Builder > Settings > Advanced > Head Markup,        -->
 <!-- ABOVE the GTM snippet, so Web Experiment can suppress flicker. -->
@@ -17,12 +19,20 @@
 <script src="https://cdn.amplitude.com/script/779be7da0166dbe0fe48618aff0728e3.js"></script>
 <!-- 2) Guides & Surveys (separate script, after Analytics, synchronous) -->
 <script src="https://cdn.amplitude.com/script/779be7da0166dbe0fe48618aff0728e3.engagement.js"></script>
-<!-- 3) Initialise for EU data residency + attach plugins -->
+<!-- 3) Initialise (US sandbox) + attach plugins -->
 <script>
   if (window.amplitude) {
     window.amplitude.init("779be7da0166dbe0fe48618aff0728e3", {
-      serverZone: "EU",
-      autocapture: true,
+      serverZone: "US",
+      autocapture: {
+        attribution: true,
+        pageViews: true,
+        sessions: false,
+        formInteractions: false,
+        fileDownloads: false,
+        elementInteractions: false,
+        frustrationInteractions: true
+      },
       fetchRemoteConfig: true
     });
     if (window.sessionReplay) window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
@@ -123,38 +133,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   .drawer .btn-primary{border-radius:10px}
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
 
-  /* toast + survey nudge */
+  /* toast */
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:60;box-shadow:var(--shadow);opacity:0;transition:.3s}
   .toast.show{opacity:1;bottom:34px}
-  .nudge{position:fixed;bottom:24px;right:24px;width:320px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:55;padding:18px;transform:translateY(20px);opacity:0;transition:.3s;pointer-events:none}
-  .nudge.show{transform:none;opacity:1;pointer-events:auto}
-  .nudge .gs-tag{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);font-weight:800}
-  .nudge h4{margin:6px 0 4px;font-size:15px}
-  .nudge p{margin:0 0 12px;font-size:13px;color:var(--muted)}
-  .nps{display:flex;gap:5px;flex-wrap:wrap}
-  .nps button{flex:1;min-width:26px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 0;font-weight:700;font-size:13px}
-  .nps button:hover{background:var(--red);color:#fff;border-color:var(--red)}
-  .nudge .x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:16px;color:var(--muted)}
 
   /* SR badge */
   .sr-badge{position:fixed;top:70px;right:16px;z-index:30;background:#111;color:#fff;font-size:11px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow)}
   .sr-dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;animation:pulse 1.4s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 
-  /* Event inspector */
-  #inspector{position:fixed;bottom:0;left:0;width:400px;max-width:96vw;z-index:70;font-family:ui-monospace,Menlo,monospace}
-  .insp-head{background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-top-right-radius:12px;cursor:pointer;border:1px solid #21262d}
-  .insp-head .l{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}
-  .insp-head .amp{width:9px;height:9px;border-radius:50%;background:#1e61f0}
-  .insp-head .cnt{background:#1e61f0;color:#fff;border-radius:999px;font-size:11px;padding:1px 8px}
-  .insp-body{background:#0d1117;border:1px solid #21262d;border-top:none;max-height:300px;overflow-y:auto;padding:8px 10px;display:none}
-  .insp-body.open{display:block}
-  .ev{border-left:2px solid #1e61f0;padding:5px 8px;margin:6px 0;background:#11161f;border-radius:0 6px 6px 0}
-  .ev .en{color:#79c0ff;font-size:12px;font-weight:700}
-  .ev .et{color:#6e7681;font-size:10px;float:right}
-  .ev .ep{color:#8b949e;font-size:11px;white-space:pre-wrap;margin-top:2px}
-  .ev.sys .en{color:#d2a8ff}
-  .ev.grp .en{color:#7ee787}
 </style>
 </head>
 <body>
@@ -237,53 +224,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </div>
 </aside>
 
-<!-- G&S survey nudge -->
-<div class="nudge" id="nudge">
-  <button class="x" id="nudgeX">×</button>
-  <div class="gs-tag">Guides &amp; Surveys</div>
-  <h4>How likely are you to recommend MyCCEP?</h4>
-  <p>0 = not likely, 10 = very likely</p>
-  <div class="nps" id="nps"></div>
-</div>
-
 <div class="toast" id="toast"></div>
-
-<!-- Event inspector -->
-<div id="inspector">
-  <div class="insp-head" id="inspHead">
-    <div class="l"><span class="amp"></span> Amplitude event inspector</div>
-    <div><span class="cnt" id="evCount">0</span></div>
-  </div>
-  <div class="insp-body" id="inspBody"></div>
-</div>
 
 <script>
 /* =====================================================================
-   DEMO INSTRUMENTATION SHIM
-   In production this whole block is replaced by the Amplitude Unified
-   Script (see head comment). Here we mock window.amplitude so the demo
-   shows exactly what would be tracked, and we mirror events into GTM's
-   dataLayer — the real "GTM as orchestrator" pattern.
+   DEMO INSTRUMENTATION
+   The Amplitude Unified Script (see <head>) is the real SDK. Below we
+   shadow `amplitude` with a thin facade that (1) logs each call to the
+   browser console, (2) mirrors it into GTM's dataLayer, and (3) forwards
+   to the real SDK. Open DevTools console to watch events.
    ===================================================================== */
 window.dataLayer = window.dataLayer || [];
-const inspBody = document.getElementById('inspBody');
-const evCount = document.getElementById('evCount');
-let _count = 0;
 function logEvent(kind, name, payload){
-  _count++; evCount.textContent = _count;
-  const el = document.createElement('div');
-  el.className = 'ev' + (kind==='sys'?' sys':kind==='grp'?' grp':'');
-  const t = new Date().toLocaleTimeString();
-  el.innerHTML = '<span class="et">'+t+'</span><span class="en">'+name+'</span>'+
-    (payload?'<div class="ep">'+JSON.stringify(payload,null,1).replace(/[{}]/g,'').trim()+'</div>':'');
-  inspBody.prepend(el);
+  const color = kind==='grp' ? '#0f9d58' : kind==='sys' ? '#8957e5' : '#1e61f0';
+  console.log('%c[Amplitude]%c '+name, 'color:'+color+';font-weight:bold', 'color:#888', payload||{});
 }
 
-/* Facade that shadows `amplitude` for the demo: it logs every call into the
-   on-screen inspector + GTM dataLayer, then forwards to the REAL Amplitude SDK
-   (loaded in <head>, EU project). We forward by name at call time — the SDK
-   loads async and swaps its own methods in, so late binding stays correct.
-   If the SDK never loads (fully offline), forwarding is skipped gracefully. */
+/* Facade that shadows `amplitude` for the demo: logs to console + GTM
+   dataLayer, then forwards to the REAL Amplitude SDK (loaded in <head>).
+   We forward by name at call time — the SDK loads async and swaps its own
+   methods in, so late binding stays correct. If the SDK never loads
+   (fully offline), forwarding is skipped gracefully. */
 const realAmp = window.amplitude;
 const _fwd = (fn, args)=>{ try{ if(realAmp && typeof realAmp[fn]==='function') realAmp[fn].apply(realAmp, args); }catch(e){ console.warn('amplitude.'+fn, e); } };
 const amplitude = {
@@ -292,7 +253,7 @@ const amplitude = {
   identify(){ logEvent('grp','identify',{}); /* user-level group already applied via setGroup */ },
   track(name,props){ logEvent('track',name,props||{}); window.dataLayer.push(Object.assign({event:name},props||{})); _fwd('track',[name, props||{}]); }
 };
-logEvent('sys', realAmp ? 'Connected · Amplitude EU' : 'Demo shim (SDK offline)', realAmp ? {project:'live'} : {});
+logEvent('sys', realAmp ? 'Connected · Amplitude US sandbox' : 'Demo shim (SDK offline)', realAmp ? {project:'live'} : {});
 
 /* ---------- Web Experiment: assign hero variant BEFORE render ---------- */
 const VARIANTS = {
@@ -372,25 +333,15 @@ document.getElementById('placeOrder').addEventListener('click',()=>{
   amplitude.track('Order Placed',{order_id:orderId,order_value:value,item_count:items,currency:'GBP'});
   cart.length=0; renderCart(); openCart(false);
   showToast('Order '+orderId+' placed ✓');
-  setTimeout(()=>showNudge(),1400); // G&S post-order survey trigger
 });
 
 /* ---------- toast ---------- */
 const toast=document.getElementById('toast'); let tT;
 function showToast(m){ toast.textContent=m; toast.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>toast.classList.remove('show'),2200); }
 
-/* ---------- G&S nudge ---------- */
-const nudge=document.getElementById('nudge'), nps=document.getElementById('nps');
-for(let i=0;i<=10;i++){ const b=document.createElement('button'); b.textContent=i; b.addEventListener('click',()=>{ amplitude.track('Survey Responded',{survey:'post_order_nps',score:i}); nudge.classList.remove('show'); showToast('Thanks for your feedback!'); }); nps.appendChild(b); }
-function showNudge(){ nudge.classList.add('show'); amplitude.track('Survey Shown',{survey:'post_order_nps'}); }
-document.getElementById('nudgeX').addEventListener('click',()=>{ nudge.classList.remove('show'); amplitude.track('Survey Dismissed',{survey:'post_order_nps'}); });
-
 /* ---------- nav + hero cta ---------- */
 document.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); amplitude.track('Nav Clicked',{item:a.dataset.nav});}));
 document.getElementById('heroCta').addEventListener('click',()=>amplitude.track('Hero CTA Clicked',{variant:document.getElementById('heroVariant').textContent.replace('variant: ','')}));
-
-/* ---------- inspector toggle ---------- */
-document.getElementById('inspHead').addEventListener('click',()=>document.getElementById('inspBody').classList.toggle('open'));
 
 /* ---------- LOGIN → PORTAL ---------- */
 amplitude.track('Page Viewed',{page:'login'});
@@ -405,7 +356,6 @@ document.getElementById('loginForm').addEventListener('submit',e=>{
   amplitude.track('Logged In',{method:'salesforce_experience_cloud'});
   document.getElementById('login').classList.add('hidden');
   document.getElementById('portal').classList.remove('hidden');
-  document.getElementById('inspBody').classList.add('open');
   amplitude.track('Page Viewed',{page:'home'});
   assignVariant();
 });
