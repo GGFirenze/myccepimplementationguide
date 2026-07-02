@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyCCEP Demo Portal — Amplitude instrumentation</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+<!-- ============================================================= -->
+<!-- LIVE AMPLITUDE INSTRUMENTATION (EU) — highest in <head>.       -->
+<!-- On Salesforce Experience Cloud this whole block goes in        -->
+<!-- Experience Builder > Settings > Advanced > Head Markup,        -->
+<!-- ABOVE the GTM snippet, so Web Experiment can suppress flicker. -->
+<!-- ============================================================= -->
+
+<!-- 1) Amplitude Unified Script: Analytics + Session Replay + Web Experiment -->
+<script src="https://cdn.amplitude.com/script/779be7da0166dbe0fe48618aff0728e3.js"></script>
+<!-- 2) Guides & Surveys (separate script, after Analytics, synchronous) -->
+<script src="https://cdn.amplitude.com/script/779be7da0166dbe0fe48618aff0728e3.engagement.js"></script>
+<!-- 3) Initialise for EU data residency + attach plugins -->
+<script>
+  if (window.amplitude) {
+    window.amplitude.init("779be7da0166dbe0fe48618aff0728e3", {
+      serverZone: "EU",
+      autocapture: true,
+      fetchRemoteConfig: true
+    });
+    if (window.sessionReplay) window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+    if (window.engagement)    window.amplitude.add(window.engagement.plugin());
+  }
+</script>
+
+<!-- 4) Google Tag Manager (real container: myccep test) -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-K8Q34SB3');</script>
+<!-- End Google Tag Manager -->
+
+<style>
+  :root{
+    --red:#F40009;--red-dark:#B10008;--ink:#0d1117;--bg:#f4f5f7;--panel:#fff;
+    --muted:#5b6472;--line:#e4e7ee;--blue:#1e61f0;--green:#0f9d58;--radius:14px;
+    --shadow:0 1px 2px rgba(16,24,40,.06),0 10px 30px rgba(16,24,40,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none!important}
+
+  /* ---------- LOGIN (mirrors eur.myccep.com/login) ---------- */
+  #login{min-height:100vh;display:flex;flex-direction:column;background:linear-gradient(160deg,#F40009,#8f0006)}
+  .login-top{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+  .login-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:34px 34px 28px}
+  .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .login-logo .can{width:26px;height:26px}
+  .login-logo .name{font-weight:800;letter-spacing:.2px}
+  .login-title{font-size:20px;font-weight:700;margin:14px 0 20px;color:#1a1a1a}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;color:#3a4150;margin-bottom:6px;font-weight:600}
+  .field input{width:100%;padding:11px 12px;border:1px solid #cdd3dd;border-radius:9px;font-size:14px}
+  .field input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(244,0,9,.12)}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin:6px 0 18px}
+  .row label{display:flex;gap:7px;align-items:center;color:#3a4150}
+  .btn-primary{width:100%;background:var(--red);color:#fff;border:none;padding:12px;border-radius:9px;font-size:15px;font-weight:700}
+  .btn-primary:hover{background:var(--red-dark)}
+  .login-alt{margin-top:16px;font-size:13px;text-align:center;color:var(--muted)}
+  .login-alt a{color:var(--blue);text-decoration:none}
+  .domain{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .domain input{width:100%;padding:9px 10px;border:1px solid #cdd3dd;border-radius:8px;margin-top:6px;font-size:13px;color:#9aa0a7}
+  .login-foot{text-align:center;color:rgba(255,255,255,.85);font-size:12px;padding:16px}
+
+  /* ---------- PORTAL ---------- */
+  header.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .top-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:18px;padding:12px 22px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800}
+  .brand .can{width:24px;height:24px}
+  .top nav{display:flex;gap:4px;margin-left:10px}
+  .top nav a{padding:8px 12px;border-radius:8px;font-size:14px;color:#3a4150;text-decoration:none}
+  .top nav a:hover{background:#f2f4f8}
+  .top .spacer{flex:1}
+  .acct{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);background:#f5f7fb;border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+  .acct b{color:var(--ink)}
+  .cart-btn{position:relative;background:var(--red);color:#fff;border:none;padding:9px 14px;border-radius:9px;font-weight:700;font-size:14px}
+  .cart-badge{position:absolute;top:-7px;right:-7px;background:#fff;color:var(--red);border:2px solid var(--red);border-radius:999px;font-size:11px;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-weight:800}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:22px}
+  /* Web Experiment hero (variant-controlled) */
+  .hero{border-radius:var(--radius);padding:26px 28px;color:#fff;margin-bottom:22px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+  .hero.control{background:linear-gradient(120deg,#2a2f3a,#0d1117)}
+  .hero.treatment{background:linear-gradient(120deg,var(--red),var(--red-dark))}
+  .hero h1{margin:0 0 6px;font-size:24px}
+  .hero p{margin:0;opacity:.9;font-size:14px;max-width:52ch}
+  .hero .cta{background:#fff;color:var(--ink);border:none;padding:11px 18px;border-radius:10px;font-weight:700;white-space:nowrap}
+  .vtag{font-size:11px;letter-spacing:.5px;text-transform:uppercase;background:rgba(255,255,255,.2);padding:3px 9px;border-radius:999px;margin-bottom:8px;display:inline-block}
+
+  .sec-title{display:flex;align-items:baseline;justify-content:space-between;margin:6px 2px 14px}
+  .sec-title h2{font-size:18px;margin:0}
+  .sec-title span{font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+  .thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:46px}
+  .card .body{padding:14px 15px;display:flex;flex-direction:column;gap:4px;flex:1}
+  .card .nm{font-weight:700;font-size:15px}
+  .card .mt{font-size:12.5px;color:var(--muted)}
+  .card .pr{font-weight:800;margin-top:6px}
+  .card .add{margin-top:10px;background:#111;color:#fff;border:none;padding:9px;border-radius:9px;font-weight:700;font-size:13.5px}
+  .card .add:hover{background:var(--red)}
+
+  /* cart drawer */
+  .drawer-bg{position:fixed;inset:0;background:rgba(13,17,23,.45);z-index:40;display:none}
+  .drawer-bg.open{display:block}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:380px;max-width:92vw;background:#fff;z-index:41;box-shadow:-8px 0 30px rgba(0,0,0,.2);transform:translateX(100%);transition:.25s;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer h3{margin:0;padding:18px 20px;border-bottom:1px solid var(--line);font-size:17px}
+  .drawer .items{flex:1;overflow-y:auto;padding:8px 16px}
+  .ci{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);font-size:14px}
+  .drawer .checkout{padding:16px 20px;border-top:1px solid var(--line)}
+  .drawer .total{display:flex;justify-content:space-between;font-weight:800;margin-bottom:12px}
+  .drawer .btn-primary{border-radius:10px}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px}
+
+  /* toast + survey nudge */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:60;box-shadow:var(--shadow);opacity:0;transition:.3s}
+  .toast.show{opacity:1;bottom:34px}
+  .nudge{position:fixed;bottom:24px;right:24px;width:320px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:55;padding:18px;transform:translateY(20px);opacity:0;transition:.3s;pointer-events:none}
+  .nudge.show{transform:none;opacity:1;pointer-events:auto}
+  .nudge .gs-tag{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--red);font-weight:800}
+  .nudge h4{margin:6px 0 4px;font-size:15px}
+  .nudge p{margin:0 0 12px;font-size:13px;color:var(--muted)}
+  .nps{display:flex;gap:5px;flex-wrap:wrap}
+  .nps button{flex:1;min-width:26px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 0;font-weight:700;font-size:13px}
+  .nps button:hover{background:var(--red);color:#fff;border-color:var(--red)}
+  .nudge .x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:16px;color:var(--muted)}
+
+  /* SR badge */
+  .sr-badge{position:fixed;top:70px;right:16px;z-index:30;background:#111;color:#fff;font-size:11px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow)}
+  .sr-dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* Event inspector */
+  #inspector{position:fixed;bottom:0;left:0;width:400px;max-width:96vw;z-index:70;font-family:ui-monospace,Menlo,monospace}
+  .insp-head{background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-top-right-radius:12px;cursor:pointer;border:1px solid #21262d}
+  .insp-head .l{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}
+  .insp-head .amp{width:9px;height:9px;border-radius:50%;background:#1e61f0}
+  .insp-head .cnt{background:#1e61f0;color:#fff;border-radius:999px;font-size:11px;padding:1px 8px}
+  .insp-body{background:#0d1117;border:1px solid #21262d;border-top:none;max-height:300px;overflow-y:auto;padding:8px 10px;display:none}
+  .insp-body.open{display:block}
+  .ev{border-left:2px solid #1e61f0;padding:5px 8px;margin:6px 0;background:#11161f;border-radius:0 6px 6px 0}
+  .ev .en{color:#79c0ff;font-size:12px;font-weight:700}
+  .ev .et{color:#6e7681;font-size:10px;float:right}
+  .ev .ep{color:#8b949e;font-size:11px;white-space:pre-wrap;margin-top:2px}
+  .ev.sys .en{color:#d2a8ff}
+  .ev.grp .en{color:#7ee787}
+</style>
+</head>
+<body>
+<!-- GTM noscript (production: immediately after <body>) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K8Q34SB3" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="login-top">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg class="can" viewBox="0 0 32 32"><defs><linearGradient id="lb" x1="0" x2="1"><stop offset="0" stop-color="#B10008"/><stop offset=".5" stop-color="#FF3038"/><stop offset="1" stop-color="#B10008"/></linearGradient></defs><path d="M8 7h16a1 1 0 0 1 1 1v18a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3V8a1 1 0 0 1 1-1z" fill="url(#lb)"/><path d="M5 17q4-3 8-1t8-1 8-1v6q-4 3-8 1t-8 1-8 1z" fill="#fff"/><ellipse cx="16" cy="7" rx="8.6" ry="2.3" fill="#d5d9de"/></svg>
+        <span class="name">European Customer Portal</span>
+      </div>
+      <div class="login-title">Log in to MyCCEP</div>
+      <form id="loginForm">
+        <div class="field"><label>Username</label><input type="text" id="username" value="uk.demo@retailer.co.uk" autocomplete="username"/></div>
+        <div class="field"><label>Password</label><input type="password" id="password" value="••••••••••" autocomplete="current-password"/></div>
+        <div class="row">
+          <label><input type="checkbox" checked/> Remember me</label>
+          <a href="#">Forgot Your Password?</a>
+        </div>
+        <button class="btn-primary" type="submit">Log In</button>
+      </form>
+      <div class="login-alt">Don't have an account? <a href="#">Sign Up</a></div>
+      <div class="domain">
+        To go to your company's login page, enter the custom domain name.
+        <input type="text" placeholder="https://domain.my.salesforce.com" disabled/>
+      </div>
+    </div>
+  </div>
+  <div class="login-foot">© 2026 Coca-Cola European Partners. All rights reserved. &nbsp;·&nbsp; <em>Demo mirror of eur.myccep.com/login — Salesforce Experience Cloud</em></div>
+</div>
+
+<!-- ================= PORTAL ================= -->
+<div id="portal" class="hidden">
+  <div class="sr-badge"><span class="sr-dot"></span> Session Replay recording</div>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">
+        <svg class="can" viewBox="0 0 32 32"><path d="M8 7h16a1 1 0 0 1 1 1v18a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3V8a1 1 0 0 1 1-1z" fill="#F40009"/><path d="M5 17q4-3 8-1t8-1 8-1v6q-4 3-8 1t-8 1-8 1z" fill="#fff"/></svg>
+        MyCCEP
+      </div>
+      <nav>
+        <a href="#" data-nav="Home">Home</a>
+        <a href="#" data-nav="Order">Order</a>
+        <a href="#" data-nav="Invoices">Invoices</a>
+        <a href="#" data-nav="Support">Support</a>
+      </nav>
+      <div class="spacer"></div>
+      <div class="acct">Outlet: <b id="outletName">Tesco Metro — Kingston</b> · <span id="outletId">SFDC_00123456</span></div>
+      <button class="cart-btn" id="openCart">Cart <span class="cart-badge" id="cartCount">0</span></button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- Web Experiment controlled hero -->
+    <div class="hero control" id="hero">
+      <div>
+        <span class="vtag" id="heroVariant">variant: control</span>
+        <h1 id="heroTitle">Reorder your essentials</h1>
+        <p id="heroCopy">Your most-ordered lines, one click away. Delivery to your outlet in 48 hours.</p>
+      </div>
+      <button class="cta" id="heroCta">Quick reorder</button>
+    </div>
+
+    <div class="sec-title"><h2>Order for your outlet</h2><span>Prices shown per case · GBP · UK</span></div>
+    <div class="grid" id="catalog"></div>
+  </div>
+</div>
+
+<!-- cart drawer -->
+<div class="drawer-bg" id="drawerBg"></div>
+<aside class="drawer" id="drawer">
+  <h3>Your order</h3>
+  <div class="items" id="cartItems"><div class="empty">Your cart is empty.</div></div>
+  <div class="checkout">
+    <div class="total"><span>Total</span><span id="cartTotal">£0.00</span></div>
+    <button class="btn-primary" id="placeOrder">Place order</button>
+  </div>
+</aside>
+
+<!-- G&S survey nudge -->
+<div class="nudge" id="nudge">
+  <button class="x" id="nudgeX">×</button>
+  <div class="gs-tag">Guides &amp; Surveys</div>
+  <h4>How likely are you to recommend MyCCEP?</h4>
+  <p>0 = not likely, 10 = very likely</p>
+  <div class="nps" id="nps"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Event inspector -->
+<div id="inspector">
+  <div class="insp-head" id="inspHead">
+    <div class="l"><span class="amp"></span> Amplitude event inspector</div>
+    <div><span class="cnt" id="evCount">0</span></div>
+  </div>
+  <div class="insp-body" id="inspBody"></div>
+</div>
+
+<script>
+/* =====================================================================
+   DEMO INSTRUMENTATION SHIM
+   In production this whole block is replaced by the Amplitude Unified
+   Script (see head comment). Here we mock window.amplitude so the demo
+   shows exactly what would be tracked, and we mirror events into GTM's
+   dataLayer — the real "GTM as orchestrator" pattern.
+   ===================================================================== */
+window.dataLayer = window.dataLayer || [];
+const inspBody = document.getElementById('inspBody');
+const evCount = document.getElementById('evCount');
+let _count = 0;
+function logEvent(kind, name, payload){
+  _count++; evCount.textContent = _count;
+  const el = document.createElement('div');
+  el.className = 'ev' + (kind==='sys'?' sys':kind==='grp'?' grp':'');
+  const t = new Date().toLocaleTimeString();
+  el.innerHTML = '<span class="et">'+t+'</span><span class="en">'+name+'</span>'+
+    (payload?'<div class="ep">'+JSON.stringify(payload,null,1).replace(/[{}]/g,'').trim()+'</div>':'');
+  inspBody.prepend(el);
+}
+
+/* Facade that shadows `amplitude` for the demo: it logs every call into the
+   on-screen inspector + GTM dataLayer, then forwards to the REAL Amplitude SDK
+   (loaded in <head>, EU project). We forward by name at call time — the SDK
+   loads async and swaps its own methods in, so late binding stays correct.
+   If the SDK never loads (fully offline), forwarding is skipped gracefully. */
+const realAmp = window.amplitude;
+const _fwd = (fn, args)=>{ try{ if(realAmp && typeof realAmp[fn]==='function') realAmp[fn].apply(realAmp, args); }catch(e){ console.warn('amplitude.'+fn, e); } };
+const amplitude = {
+  setUserId(id){ logEvent('sys','setUserId',{user_id:id}); _fwd('setUserId',[id]); },
+  setGroup(type,val){ logEvent('grp','setGroup (Accounts)',{[type]:val}); _fwd('setGroup',[type,val]); },
+  identify(){ logEvent('grp','identify',{}); /* user-level group already applied via setGroup */ },
+  track(name,props){ logEvent('track',name,props||{}); window.dataLayer.push(Object.assign({event:name},props||{})); _fwd('track',[name, props||{}]); }
+};
+logEvent('sys', realAmp ? 'Connected · Amplitude EU' : 'Demo shim (SDK offline)', realAmp ? {project:'live'} : {});
+
+/* ---------- Web Experiment: assign hero variant BEFORE render ---------- */
+const VARIANTS = {
+  control:   {cls:'control',   title:'Reorder your essentials', copy:'Your most-ordered lines, one click away. Delivery to your outlet in 48 hours.', cta:'Quick reorder'},
+  treatment: {cls:'treatment', title:'Save 10% on your next case order', copy:'Limited-time trade offer across Coca-Cola, Fanta and Sprite. Stock up before the weekend.', cta:'Shop the offer'}
+};
+function assignVariant(){
+  const v = Math.random() < 0.5 ? 'control' : 'treatment';
+  const cfg = VARIANTS[v];
+  const hero = document.getElementById('hero');
+  hero.className = 'hero '+cfg.cls;
+  document.getElementById('heroVariant').textContent = 'variant: '+v;
+  document.getElementById('heroTitle').textContent = cfg.title;
+  document.getElementById('heroCopy').textContent = cfg.copy;
+  document.getElementById('heroCta').textContent = cfg.cta;
+  amplitude.track('Experiment Exposure', {experiment:'homepage_hero_offer', variant:v});
+}
+
+/* ---------- Catalog ---------- */
+const PRODUCTS = [
+  {id:'cc-orig',  nm:'Coca-Cola Original 330ml', mt:'24 × 330ml case', pr:12.50, emo:'🥤'},
+  {id:'cc-zero',  nm:'Coca-Cola Zero Sugar 330ml', mt:'24 × 330ml case', pr:12.50, emo:'⚫'},
+  {id:'diet',     nm:'Diet Coke 330ml', mt:'24 × 330ml case', pr:12.50, emo:'⚪'},
+  {id:'fanta',    nm:'Fanta Orange 330ml', mt:'24 × 330ml case', pr:11.80, emo:'🟠'},
+  {id:'sprite',   nm:'Sprite 330ml', mt:'24 × 330ml case', pr:11.80, emo:'🟢'},
+  {id:'schwep',   nm:'Schweppes Lemonade 1L', mt:'12 × 1L case', pr:13.20, emo:'🍋'},
+  {id:'monster',  nm:'Monster Energy 500ml', mt:'12 × 500ml case', pr:14.40, emo:'🟩'},
+  {id:'powerade', nm:'Powerade Berry 500ml', mt:'12 × 500ml case', pr:13.00, emo:'🔵'},
+  {id:'smart',    nm:'Smartwater 600ml', mt:'24 × 600ml case', pr:15.60, emo:'💧'},
+  {id:'costa',    nm:'Costa Coffee Latte 250ml', mt:'12 × 250ml case', pr:16.20, emo:'☕'},
+  {id:'appletiser',nm:'Appletiser 275ml', mt:'24 × 275ml case', pr:17.40, emo:'🍏'},
+  {id:'dr-p',     nm:'Dr Pepper 330ml', mt:'24 × 330ml case', pr:12.50, emo:'🟤'}
+];
+const cat = document.getElementById('catalog');
+PRODUCTS.forEach(p=>{
+  const c = document.createElement('div'); c.className='card';
+  c.innerHTML = '<div class="thumb" style="background:linear-gradient(135deg,#fff,#f1f3f7)">'+p.emo+'</div>'+
+    '<div class="body"><div class="nm">'+p.nm+'</div><div class="mt">'+p.mt+'</div>'+
+    '<div class="pr">£'+p.pr.toFixed(2)+'</div>'+
+    '<button class="add">Add to order</button></div>';
+  c.querySelector('.add').addEventListener('click',()=>addToCart(p));
+  c.addEventListener('mouseenter',()=>{ if(!c._viewed){c._viewed=true; amplitude.track('Product Viewed',{product_id:p.id,product_name:p.nm,price:p.pr});}});
+  cat.appendChild(c);
+});
+
+/* ---------- Cart ---------- */
+const cart = [];
+const cartCount=document.getElementById('cartCount'), cartItems=document.getElementById('cartItems'),
+      cartTotal=document.getElementById('cartTotal');
+function renderCart(){
+  cartCount.textContent = cart.reduce((s,i)=>s+i.qty,0);
+  if(!cart.length){ cartItems.innerHTML='<div class="empty">Your cart is empty.</div>'; cartTotal.textContent='£0.00'; return; }
+  cartItems.innerHTML='';
+  cart.forEach(i=>{
+    const r=document.createElement('div'); r.className='ci';
+    r.innerHTML='<span>'+i.nm+' × '+i.qty+'</span><span>£'+(i.pr*i.qty).toFixed(2)+'</span>';
+    cartItems.appendChild(r);
+  });
+  cartTotal.textContent='£'+cart.reduce((s,i)=>s+i.pr*i.qty,0).toFixed(2);
+}
+function addToCart(p){
+  const ex=cart.find(i=>i.id===p.id); if(ex)ex.qty++; else cart.push({...p,qty:1});
+  renderCart(); showToast(p.nm+' added');
+  amplitude.track('Product Added to Cart',{product_id:p.id,product_name:p.nm,price:p.pr});
+}
+
+/* ---------- drawer / checkout ---------- */
+const drawer=document.getElementById('drawer'), drawerBg=document.getElementById('drawerBg');
+function openCart(open){ drawer.classList.toggle('open',open); drawerBg.classList.toggle('open',open); if(open)amplitude.track('Cart Viewed',{item_count:cart.reduce((s,i)=>s+i.qty,0)}); }
+document.getElementById('openCart').addEventListener('click',()=>openCart(true));
+drawerBg.addEventListener('click',()=>openCart(false));
+document.getElementById('placeOrder').addEventListener('click',()=>{
+  if(!cart.length){ showToast('Add items first'); return; }
+  const value=+cart.reduce((s,i)=>s+i.pr*i.qty,0).toFixed(2);
+  const items=cart.reduce((s,i)=>s+i.qty,0);
+  const orderId='UK-'+Math.floor(100000+Math.random()*900000);
+  amplitude.track('Order Placed',{order_id:orderId,order_value:value,item_count:items,currency:'GBP'});
+  cart.length=0; renderCart(); openCart(false);
+  showToast('Order '+orderId+' placed ✓');
+  setTimeout(()=>showNudge(),1400); // G&S post-order survey trigger
+});
+
+/* ---------- toast ---------- */
+const toast=document.getElementById('toast'); let tT;
+function showToast(m){ toast.textContent=m; toast.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>toast.classList.remove('show'),2200); }
+
+/* ---------- G&S nudge ---------- */
+const nudge=document.getElementById('nudge'), nps=document.getElementById('nps');
+for(let i=0;i<=10;i++){ const b=document.createElement('button'); b.textContent=i; b.addEventListener('click',()=>{ amplitude.track('Survey Responded',{survey:'post_order_nps',score:i}); nudge.classList.remove('show'); showToast('Thanks for your feedback!'); }); nps.appendChild(b); }
+function showNudge(){ nudge.classList.add('show'); amplitude.track('Survey Shown',{survey:'post_order_nps'}); }
+document.getElementById('nudgeX').addEventListener('click',()=>{ nudge.classList.remove('show'); amplitude.track('Survey Dismissed',{survey:'post_order_nps'}); });
+
+/* ---------- nav + hero cta ---------- */
+document.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); amplitude.track('Nav Clicked',{item:a.dataset.nav});}));
+document.getElementById('heroCta').addEventListener('click',()=>amplitude.track('Hero CTA Clicked',{variant:document.getElementById('heroVariant').textContent.replace('variant: ','')}));
+
+/* ---------- inspector toggle ---------- */
+document.getElementById('inspHead').addEventListener('click',()=>document.getElementById('inspBody').classList.toggle('open'));
+
+/* ---------- LOGIN → PORTAL ---------- */
+amplitude.track('Page Viewed',{page:'login'});
+document.getElementById('loginForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const userId='0053000UK'+Math.floor(1000+Math.random()*9000);
+  const outletId='SFDC_00123456';
+  // Identity + Accounts (user-level group), synced key = Salesforce Account ID
+  amplitude.setUserId(userId);
+  amplitude.setGroup('account', outletId);
+  amplitude.identify();
+  amplitude.track('Logged In',{method:'salesforce_experience_cloud'});
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('portal').classList.remove('hidden');
+  document.getElementById('inspBody').classList.add('open');
+  amplitude.track('Page Viewed',{page:'home'});
+  assignVariant();
+});
+</script>
+</body>
+</html>
