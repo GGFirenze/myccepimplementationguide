@@ -24,16 +24,19 @@
   if (window.amplitude) {
     window.amplitude.init("779be7da0166dbe0fe48618aff0728e3", {
       serverZone: "US",
+      remoteConfig: { fetchRemoteConfig: true }, // remote SDK config from Amplitude
       autocapture: {
-        attribution: true,
-        pageViews: true,
-        sessions: false,
-        formInteractions: false,
-        fileDownloads: false,
-        elementInteractions: false,
-        frustrationInteractions: true
-      },
-      fetchRemoteConfig: true
+        attribution: true,             // UTM / referrer attribution events
+        pageViews: true,               // SPA route changes + initial load
+        sessions: false,                // Session start / end events
+        formInteractions: false,        // Form starts + submits
+        fileDownloads: false,           // Downloads of common file types
+        elementInteractions: false,     // Click + change on instrumented els
+        frustrationInteractions: true, // Rage clicks, dead clicks
+        pageUrlEnrichment: true,       // Adds path / search to event props
+        networkTracking: true,         // XHR + fetch request events
+        webVitals: true                // CWV (LCP, INP, CLS) on page hide
+      }
     });
     if (window.sessionReplay) window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
     if (window.engagement)    window.amplitude.add(window.engagement.plugin());
@@ -269,7 +272,7 @@ function assignVariant(){
   document.getElementById('heroTitle').textContent = cfg.title;
   document.getElementById('heroCopy').textContent = cfg.copy;
   document.getElementById('heroCta').textContent = cfg.cta;
-  amplitude.track('Experiment Exposure', {experiment:'homepage_hero_offer', variant:v});
+  amplitude.track('Experiment Exposure Recorded', {experiment:'homepage_hero_offer', variant:v});
 }
 
 /* ---------- Catalog ---------- */
@@ -340,11 +343,10 @@ const toast=document.getElementById('toast'); let tT;
 function showToast(m){ toast.textContent=m; toast.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>toast.classList.remove('show'),2200); }
 
 /* ---------- nav + hero cta ---------- */
-document.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); amplitude.track('Nav Clicked',{item:a.dataset.nav});}));
+document.querySelectorAll('[data-nav]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault(); amplitude.track('Portal Nav Clicked',{item:a.dataset.nav});}));
 document.getElementById('heroCta').addEventListener('click',()=>amplitude.track('Hero CTA Clicked',{variant:document.getElementById('heroVariant').textContent.replace('variant: ','')}));
 
 /* ---------- LOGIN → PORTAL ---------- */
-amplitude.track('Page Viewed',{page:'login'});
 document.getElementById('loginForm').addEventListener('submit',e=>{
   e.preventDefault();
   const userId='0053000UK'+Math.floor(1000+Math.random()*9000);
@@ -353,10 +355,9 @@ document.getElementById('loginForm').addEventListener('submit',e=>{
   amplitude.setUserId(userId);
   amplitude.setGroup('account', outletId);
   amplitude.identify();
-  amplitude.track('Logged In',{method:'salesforce_experience_cloud'});
+  amplitude.track('User Logged In',{method:'salesforce_experience_cloud', outlet_id:outletId});
   document.getElementById('login').classList.add('hidden');
   document.getElementById('portal').classList.remove('hidden');
-  amplitude.track('Page Viewed',{page:'home'});
   assignVariant();
 });
 </script>
