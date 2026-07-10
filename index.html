@@ -110,6 +110,7 @@
   .n-mob{border-color:#0f9d58;background:#effaf2}
   .n-src{border-color:#8957e5;background:#f6f1fe}
   .n-amp{border-color:var(--red);background:#fff4f4}
+  .n-ghost{border-color:#c7ccd6;background:#f2f4f8;color:#8a93a2;border-style:dashed}
   .arrow{text-align:center;color:#9aa3b2;font-size:22px;line-height:1;margin:2px 0}
   .layer-label{text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#98a1b0;margin:16px 0 4px}
 
@@ -183,7 +184,7 @@
             <li>Analytics</li><li>Web Experiment</li><li>Session Replay</li><li>Guides &amp; Surveys</li><li>Accounts (groups)</li>
           </ul></div>
           <div class="card"><h3>Existing stack</h3><ul class="clean">
-            <li>Google Tag Manager (primary)</li><li>SAP (commerce / ERP)</li><li>Salesforce (customer attributes)</li>
+            <li>Google Tag Manager (tag management)</li><li>Salesforce Commerce Cloud (Cloud Craze B2B) — orders, revenue, volume, registrations</li><li>SAP — pricing / order engine (behind Salesforce)</li><li>GA4 — current web analytics, to be replaced</li>
           </ul></div>
           <div class="card"><h3>The headline decision</h3><p style="font-size:14px;margin:0">Load Amplitude via the <strong>Unified Script (CDN)</strong> and use <strong>GTM as the event orchestrator</strong> — not as the Amplitude loader. Mobile uses <strong>native SDKs</strong>.</p></div>
         </div>
@@ -211,6 +212,9 @@
           </tbody>
         </table>
 
+        <div class="callout info"><div class="t">ℹ How to read the ✓</div>
+          In the <strong>Unified Script (CDN)</strong> column, ✓ means <strong>included in the one script tag — no separate install</strong>. Analytics, Session Replay and Web Experiment all load from that single tag. The <em>only</em> exception is <strong>Guides &amp; Surveys</strong> (<code>✓ (+script)</code>), which adds one more CDN tag (<code>...engagement.js</code>) purely for bundle size. So the whole web runtime is <strong>two tags in <code>&lt;head&gt;</code></strong>.</div>
+
         <div class="callout warn"><div class="t">⚠ Don't confuse the two "Experiment" products</div>
           <strong>Web Experiment</strong> = no-code visual A/B testing (what CCEP bought, only in the Unified Script). <strong>Feature Experiment</strong> = code-based feature flags (in the npm Unified SDK, <em>not</em> purchased). They are not interchangeable.</div>
 
@@ -237,8 +241,9 @@
         <div class="diagram">
           <div class="layer-label">Customer data sources</div>
           <div class="layer">
-            <div class="node n-src"><div class="h">Salesforce</div><div class="s">Customer / account attributes</div></div>
-            <div class="node n-src"><div class="h">SAP</div><div class="s">Commerce · orders · ERP</div></div>
+            <div class="node n-src"><div class="h">Salesforce Commerce Cloud</div><div class="s">Cloud Craze B2B — revenue · volume<br/>orders · registrations · account attributes</div></div>
+            <div class="node n-src"><div class="h">SAP</div><div class="s">pricing / order engine<br/>(behind Salesforce)</div></div>
+            <div class="node n-ghost"><div class="h">GA4 (current)</div><div class="s">visits · sessions · journey · devices<br/>replaced by Amplitude on web</div></div>
           </div>
           <div class="arrow">│</div>
           <div class="layer-label">Collection layer</div>
@@ -263,11 +268,14 @@
         </div>
 
         <div class="callout info"><div class="t">🔗 Data feeds</div>
-          <strong>Salesforce → Accounts:</strong> daily group-property sync (group value must exist in Salesforce). <strong>SAP → Ingestion (optional):</strong> server-side events / identity via HTTP V2 or Batch API; server-side GTM is a Phase 2+ option.</div>
+          <strong>Salesforce → Accounts:</strong> daily group-property sync (group value must exist in Salesforce). <strong>Commerce data → Amplitude (Phase 2):</strong> revenue, volume and orders live in Salesforce Commerce Cloud (Cloud Craze, SAP behind) and can flow into Amplitude via API/events — revenue was historically never linked to GA on security grounds, so it's tabled as a Phase 2 item pending security review.</div>
+
+        <div class="callout ok"><div class="t">✓ The opportunity Amplitude unlocks</div>
+          Today Salesforce (commerce) and GA4 (behaviour) are <strong>siloed</strong> — there's no single view of <em>visit → registration → order → revenue</em>. Amplitude on the web/app layer unifies the behavioural journey now, then links commerce/revenue in Phase 2.</div>
 
         <h2>Cross-cutting decisions</h2>
         <div class="grid c2">
-          <div class="card"><h3>One canonical identity</h3><p style="font-size:14px;margin:0">Use one <code>user_id</code> (the SAP/Salesforce customer/contact ID) identically on Web, iOS, Android so cross-platform user &amp; account resolution works.</p></div>
+          <div class="card"><h3>One canonical identity</h3><p style="font-size:14px;margin:0">Use one <code>user_id</code> (the Salesforce / Cloud Craze customer/contact ID) identically on Web, iOS, Android so cross-platform user &amp; account resolution works.</p></div>
           <div class="card"><h3>One EU project + <code>country</code> property</h3><p style="font-size:14px;margin:0">Phase 2 scales via a <code>country</code> event/user property in a single EU project — enables cross-country reporting while keeping one taxonomy. (Alternative: project-per-country for hard isolation.)</p></div>
           <div class="card"><h3>EU data residency</h3><p style="font-size:14px;margin:0">Set <code>serverZone: "EU"</code> everywhere and use EU endpoints. Confirm EU CDN/script endpoints during Sprint 0.</p></div>
           <div class="card"><h3>Test project first</h3><p style="font-size:14px;margin:0">Account/group data is <strong>not retroactive</strong>. Validate in a test project before production go-live.</p></div>
