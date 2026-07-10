@@ -19,16 +19,19 @@
   if (window.amplitude) {
     window.amplitude.init("a621d665ef463aef8da926a6443ebfc9", {
       serverZone: "US",
+      remoteConfig: { fetchRemoteConfig: true }, // remote SDK config from Amplitude
       autocapture: {
-        attribution: true,
-        pageViews: true,
-        sessions: true,
-        formInteractions: true,
-        fileDownloads: true,
-        elementInteractions: true,
-        frustrationInteractions: true
-      },
-      fetchRemoteConfig: true
+        attribution: true,             // UTM / referrer attribution events
+        pageViews: true,               // SPA route changes + initial load
+        sessions: false,                // Session start / end events
+        formInteractions: false,        // Form starts + submits
+        fileDownloads: false,           // Downloads of common file types
+        elementInteractions: false,     // Click + change on instrumented els
+        frustrationInteractions: true, // Rage clicks, dead clicks
+        pageUrlEnrichment: true,       // Adds path / search to event props
+        networkTracking: true,         // XHR + fetch request events
+        webVitals: true                // CWV (LCP, INP, CLS) on page hide
+      }
     });
     if (window.sessionReplay) window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
     if (window.engagement)    window.amplitude.add(window.engagement.plugin());
@@ -538,22 +541,49 @@ amplitude.<span class="tok-f">identify</span>(id);</code></pre>
     if(['web','mobile','accounts'].includes(t)) return 'Build';
     return 'Reference';
   };
+  let _currentSection = location.hash.replace('#','') || 'overview';
   function show(t){
+    const prev = _currentSection;
+    _currentSection = t;
     pages.forEach(p=>p.classList.toggle('active',p.id===t));
     links.forEach(a=>a.classList.toggle('active',a.dataset.t===t));
     const label = links.find(a=>a.dataset.t===t)?.textContent.trim();
     crumb.textContent = groupOf(t)+' / '+label;
     window.scrollTo({top:0,behavior:'smooth'});
     history.replaceState(null,'','#'+t);
+    if (window.amplitude) window.amplitude.track('Guide Section Navigated', {
+      section: t,
+      section_group: groupOf(t),
+      previous_section: prev
+    });
   }
   nav.addEventListener('click',e=>{const a=e.target.closest('a');if(a){show(a.dataset.t);}});
-  document.addEventListener('click',e=>{const j=e.target.closest('[data-jump]');if(j){e.preventDefault();show(j.dataset.jump);}});
+  document.addEventListener('click',e=>{
+    const j=e.target.closest('[data-jump]');
+    if(j){
+      e.preventDefault();
+      const target=j.dataset.jump;
+      if (window.amplitude) window.amplitude.track('Deep Link Followed', {
+        target_section: target,
+        source_section: _currentSection
+      });
+      show(target);
+    }
+  });
 
   // copy buttons
   document.querySelectorAll('.code .copy').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const code = btn.closest('.code').querySelector('code').innerText;
-      navigator.clipboard.writeText(code).then(()=>{const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>btn.textContent=o,1400);});
+      const filename = btn.closest('.code').querySelector('.fn')?.textContent.trim() || 'unknown';
+      navigator.clipboard.writeText(code).then(()=>{
+        const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>btn.textContent=o,1400);
+        if (window.amplitude) window.amplitude.track('Code Block Copied', {
+          filename,
+          section: _currentSection,
+          code_length: code.length
+        });
+      });
     });
   });
 
@@ -563,6 +593,10 @@ amplitude.<span class="tok-f">identify</span>(id);</code></pre>
       document.querySelectorAll('.phase-toggle button').forEach(x=>x.classList.remove('active'));
       b.classList.add('active');
       document.querySelectorAll('.phase-block').forEach(x=>x.classList.toggle('active',x.id===b.dataset.p));
+      if (window.amplitude) window.amplitude.track('Roadmap Phase Toggled', {
+        phase: b.dataset.p,
+        phase_label: b.textContent.trim()
+      });
     });
   });
 
