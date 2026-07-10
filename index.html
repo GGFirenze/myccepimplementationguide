@@ -3,6 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ============================================================= -->
+<!-- LIVE AMPLITUDE INSTRUMENTATION (this guide dogfoods the setup) -->
+<!-- Unified Script (CDN) — US datacenter sandbox project.          -->
+<!-- CCEP PRODUCTION is EU — switch serverZone to "EU" there.       -->
+<!-- Keep this block as high in <head> as possible (anti-flicker).  -->
+<!-- ============================================================= -->
+<!-- 1) Analytics + Session Replay + Web Experiment -->
+<script src="https://cdn.amplitude.com/script/a621d665ef463aef8da926a6443ebfc9.js"></script>
+<!-- 2) Guides & Surveys (separate script, after Analytics, synchronous) -->
+<script src="https://cdn.amplitude.com/script/a621d665ef463aef8da926a6443ebfc9.engagement.js"></script>
+<!-- 3) Initialise (US sandbox) + attach plugins -->
+<script>
+  if (window.amplitude) {
+    window.amplitude.init("a621d665ef463aef8da926a6443ebfc9", {
+      serverZone: "US",
+      autocapture: {
+        attribution: true,
+        pageViews: true,
+        sessions: true,
+        formInteractions: true,
+        fileDownloads: true,
+        elementInteractions: true,
+        frustrationInteractions: true
+      },
+      fetchRemoteConfig: true
+    });
+    if (window.sessionReplay) window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+    if (window.engagement)    window.amplitude.add(window.engagement.plugin());
+  }
+</script>
+<!-- ============================================================= -->
+
 <title>MyCCEP × Amplitude — Implementation Guide</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="mask-icon" href="favicon.svg" color="#F40009" />
